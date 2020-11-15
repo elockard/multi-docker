@@ -1,0 +1,20 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t salinabookshelf/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true salinabookshelf/react-test npm test
+
+after_success:
+  - docker build -t salinabookshelf/multi-client ./client
+  - docker build -t salinabookshelf/multi-nginx ./nginx
+  - docker build -t salinabookshelf/multi-server ./server
+  - docker build -t salinabookshelf/multi-worker ./worker
+  - echo :"$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-sdtin
+  - docker push salinabookshelf/multi-client
+  - docker push salinabookshelf/multi-server
+  - docker push salinabookshelf/multi-nginx
+  - docker push salinabookshelf/multi-worker
